@@ -1,8 +1,8 @@
 import Foundation
 import SQLite3
 
-// knowledgeC `/app/usage` 的区间结束时间 = app 最近一次结束前台使用的时刻。
-// 私有数据库受 TCC 保护，必须授予 Full Disk Access；查询只操作带 WAL 的临时副本。
+// knowledgeC `/app/usage` 区间结束时间 = app 最近一次结束前台使用的时刻。
+// 私有库受 TCC 保护，需 Full Disk Access；查询只操作带 WAL 的临时副本。
 nonisolated enum KnowledgeDB {
     enum FocusResult: Sendable {
         case ok([String: Int64])

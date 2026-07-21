@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# 构建 jj-apps.app（本机架构 Release）→ 组装 bundle → ad-hoc 签名 → 装到 /Applications。
-# 纯本机工具，无 CI / 无分发：arch 由 swift 自动取本机、install 是必然，故无任何参数。
-# 本机自建 .app 无 quarantine，Gatekeeper 不校验签名，直接可跑。
-# 调试用 `swift build`（Debug）+ `.build/debug/jj-apps`，本脚本恒 Release。
+# 本机架构 Release 构建 -> 组装 .app -> ad-hoc 签名 -> 装 /Applications。
+# 纯本机工具无 CI / 无分发：arch 由 swift 自动取本机，install 是必然，故无参数。
+# 本机自建 .app 无 quarantine，Gatekeeper 不校验签名，直接可跑。Debug 用 `swift build`。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,12 +22,12 @@ sed "s/@VERSION@/$VERSION/g" "$ROOT/Resources/Info.plist.in" > "$BUNDLE/Contents
 printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
 echo "==> [3/4] ad-hoc 签名"
-# DR 钉成 identifier-only（不含 cdhash），FDA 授权才不会因重建时 cdhash 变化而失效。
+# DR 钉 identifier-only（不含 cdhash），FDA 授权不因重建 cdhash 变化而失效
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$BUNDLE/Contents/Info.plist")"
 codesign --force --sign - --identifier "$BUNDLE_ID" -r="designated => identifier \"$BUNDLE_ID\"" "$BUNDLE"
 
 echo "==> [4/4] 安装到 /Applications"
-# 关掉在跑的旧实例，否则占用二进制导致拷贝/运行异常
+# 关旧实例，否则占用二进制导致拷贝 / 运行异常
 pkill -f '/jj-apps\.app/Contents/MacOS/jj-apps' 2>/dev/null || true
 rm -rf "/Applications/jj-apps.app"
 ditto "$BUNDLE" "/Applications/jj-apps.app"

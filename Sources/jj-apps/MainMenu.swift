@@ -1,13 +1,13 @@
 import AppKit
 
-// 程序化构建主菜单（无 xib）。App / Edit / View / Window 四组，够用即可。
+// 程序化主菜单（无 xib）：App / Edit / View / Window
 nonisolated enum MainMenu {
     @MainActor
     static func build() -> NSMenu {
         let main = NSMenu()
         let app = "jj-apps"
 
-        // App 菜单
+        // App
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
@@ -28,7 +28,7 @@ nonisolated enum MainMenu {
                                    action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.keyEquivalentModifierMask = [.command]
 
-        // Edit 菜单（搜索框文本编辑需要标准剪贴板动作）
+        // Edit（搜索框文本编辑需要标准剪贴板动作）
         let editItem = NSMenuItem()
         main.addItem(editItem)
         let editMenu = NSMenu(title: "Edit")
@@ -38,7 +38,7 @@ nonisolated enum MainMenu {
         editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
-        // View 菜单（刷新 + 查找聚焦搜索框）
+        // View
         let viewItem = NSMenuItem()
         main.addItem(viewItem)
         let viewMenu = NSMenu(title: "View")
@@ -48,7 +48,7 @@ nonisolated enum MainMenu {
         viewMenu.addItem(withTitle: "Find",
                          action: #selector(MainViewController.focusSearch(_:)), keyEquivalent: "f")
 
-        // Window 菜单
+        // Window
         let winItem = NSMenuItem()
         main.addItem(winItem)
         let winMenu = NSMenu(title: "Window")

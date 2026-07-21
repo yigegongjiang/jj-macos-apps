@@ -1,20 +1,18 @@
 import AppKit
 
-// 主界面：搜索框 + 刷新 + FDA 横幅 + 应用列表。
-// 表格布局：3 列 = App / Last Used / Last Update；列头可点击排序（native NSTableView
-// sortDescriptors）；默认按 last_focus 降序。首次点击列头进入该列 prototype (降序)，再次点击
-// AppKit 自动 toggle 升/降。相等时 name 升序兜底保证确定序。
+// 主界面：搜索框 + 刷新 + FDA 横幅 + 3 列表格（App / Last Used / Last Update）。
+// 列头排序：native NSTableView sortDescriptors，默认 last_focus 降序，再点同列 toggle 升 / 降，相等用 name 兜底。
 final class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate {
     private let searchField = NSSearchField()
     private let refreshButton = NSButton()
     private let statusLabel = NSTextField(labelWithString: "")
     private let spinner = NSProgressIndicator()
 
-    // 自动退出：空闲 idleSeconds 秒后退出，任意交互重置。只显示剩余秒数。
+    // 空闲 idleSeconds 秒退出；任意本 app 交互重置倒计时
     private let countdownLabel = NSTextField(labelWithString: "")
-    private static let idleSeconds = 300      // 空闲阈值（秒）
-    private var autoExitDeadline: Date?       // 到点即退出的时刻；每次交互后移
-    private var countdownTimer: Timer?        // 每秒刷新倒计时 + 到点触发退出
+    private static let idleSeconds = 300
+    private var autoExitDeadline: Date?
+    private var countdownTimer: Timer?
     private var activityMonitor: Any?
 
     private let bannerView = NSView()
@@ -27,7 +25,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     private var iconCache: [String: NSImage] = [:]
     private var isRefreshing = false
 
-    // 排序键（与列 identifier 对齐 / 与 AppRecord JSON key 对齐）
+    // 与列 identifier / AppRecord JSON key 对齐
     private static let sortKeyLastFocus  = "last_focus"
     private static let sortKeyLastUpdate = "last_update"
 
@@ -53,7 +51,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         spinner.isDisplayedWhenStopped = false
         spinner.translatesAutoresizingMaskIntoConstraints = false
 
-        countdownLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)  // 数字等宽 → 每秒跳动不抖动
+        countdownLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)   // 等宽 -> 每秒跳动不抖
         countdownLabel.textColor = .secondaryLabelColor
         countdownLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -66,7 +64,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         buildBanner()
         root.addSubview(bannerView)
 
-        // 列表：3 列 + 列头（保留默认 NSTableHeaderView）
         tableView.rowHeight = 30
         tableView.usesAlternatingRowBackgroundColors = true
         tableView.dataSource = self
@@ -76,7 +73,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         tableView.onActivate = { [weak self] _ in self?.openSelected() }
         tableView.menu = buildRowMenu()
 
-        // App 列：图标 + 名字 + bundleId；随窗口宽度自动伸缩；不参与排序
+        // App 列：随窗口伸缩，不参与排序
         let appCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("app"))
         appCol.title = "Application"
         appCol.resizingMask = .autoresizingMask
@@ -84,7 +81,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         appCol.width = 420
         tableView.addTableColumn(appCol)
 
-        // Last Used 列：可点击排序，prototype 降序
         let focusCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(Self.sortKeyLastFocus))
         focusCol.title = "Last Used"
         focusCol.minWidth = 130
@@ -93,7 +89,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         focusCol.sortDescriptorPrototype = NSSortDescriptor(key: Self.sortKeyLastFocus, ascending: false)
         tableView.addTableColumn(focusCol)
 
-        // Last Update 列：可点击排序，prototype 降序
         let updateCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(Self.sortKeyLastUpdate))
         updateCol.title = "Last Update"
         updateCol.minWidth = 130
@@ -102,7 +97,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         updateCol.sortDescriptorPrototype = NSSortDescriptor(key: Self.sortKeyLastUpdate, ascending: false)
         tableView.addTableColumn(updateCol)
 
-        // 初始排序 = last_focus 降序
         tableView.sortDescriptors = [NSSortDescriptor(key: Self.sortKeyLastFocus, ascending: false)]
 
         scrollView.documentView = tableView
@@ -147,7 +141,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     override func viewDidLoad() {
         super.viewDidLoad()
         renderFromCache()   // 秒开：先吃 JSON 缓存
-        refresh(nil)        // 再后台 scan 校正（补新装 / 删卸载）
+        refresh(nil)        // 再后台 scan 校正
         startActivityMonitor()
         scheduleAutoExit()
     }
@@ -212,15 +206,14 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         bannerHeight.constant = visible ? 52 : 0
     }
 
-    // MARK: - 自动退出（空闲计时；任意交互重置倒计时，仅真正空闲 N 分钟后退出）
+    // MARK: - 自动退出
 
-    // 重置倒计时：deadline 推到「当前 + idleSeconds」，并保证每秒刷新的 timer 在跑。
     private func scheduleAutoExit() {
         autoExitDeadline = Date().addingTimeInterval(TimeInterval(Self.idleSeconds))
-        updateCountdownLabel()  // 立即刷新，避免首个 tick 前 1s 空窗
+        updateCountdownLabel()   // 立即刷新，避免首个 tick 前 1s 空窗
         if countdownTimer == nil {
-            // 单个常驻 repeating timer；交互只后移 deadline，不重建。
-            // target-action 而非 block：规避 @Sendable 闭包捕获 self 的并发约束。
+            // 单个常驻 timer；交互只后移 deadline，不重建。
+            // target-action 而非 block：规避 @Sendable 闭包对 self 的并发约束。
             // .common：菜单展开等 tracking 期间仍计时。
             let t = Timer(timeInterval: 1, target: self,
                           selector: #selector(tickCountdown), userInfo: nil, repeats: true)
@@ -231,7 +224,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
     @objc private func tickCountdown() {
         guard let deadline = autoExitDeadline else { return }
-        if Date() >= deadline { NSApp.terminate(nil); return }  // RunLoop.main → 已在主线程
+        if Date() >= deadline { NSApp.terminate(nil); return }
         updateCountdownLabel()
     }
 
@@ -241,7 +234,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         countdownLabel.stringValue = "Exit: \(remaining)s"
     }
 
-    // 本 app 内任意键鼠交互重置倒计时；后台无事件即持续计时 → 空闲到点退出。
     private func startActivityMonitor() {
         activityMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown, .scrollWheel]
@@ -253,7 +245,6 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
     // MARK: - 排序
 
-    // 依当前 tableView.sortDescriptors 排序；相等用 name 升序兜底。
     private func sortedApps(_ apps: [AppRecord]) -> [AppRecord] {
         let d = tableView.sortDescriptors.first
         let key = d?.key ?? Self.sortKeyLastFocus
@@ -270,13 +261,12 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         }
     }
 
-    // native 列头排序回调：点击列头 → AppKit 更新 tableView.sortDescriptors → 触发此方法。
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
         allApps = sortedApps(allApps)
         applyFilter()
     }
 
-    // MARK: - 启动：读 JSON 缓存立即渲染
+    // MARK: - 启动缓存
 
     private func renderFromCache() {
         allApps = sortedApps(AppRepository.load().apps)
@@ -297,15 +287,14 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         }
     }
 
-    // rebuild 候选集与当前内存合并：last_focus 取较大者防回退；
-    // last_update 以 rebuild 结果为准（文件系统当下即真相，不 max-merge）。
+    // 合并 rebuild 快照与当前内存：last_focus 取较大值防回退；
+    // ignored 取 OR（扫描进行中用户 ignore 的标记不被旧快照覆盖）；
+    // last_update 以 rebuild 为准（文件系统当下即真相）。
     private func apply(_ result: AppRepository.RebuildResult) {
         isRefreshing = false
         refreshButton.isEnabled = true
         spinner.stopAnimation(nil)
 
-        // 内存 allApps 恒 ≥ rebuild 后台快照的新鲜度：last_focus 取较大者防回退，
-        // ignored 取 OR（扫描进行中用户 ignore 的标记不能被旧快照覆盖丢失）。
         var priorByPath: [String: AppRecord] = [:]
         for r in allApps { priorByPath[r.path] = r }
         let merged = result.apps.map { r -> AppRecord in
@@ -323,7 +312,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     }
 
     private func applyFilter() {
-        // 展示层过滤 ignored：allApps 仍持全量（含 ignored）以便落盘保留标记，仅显示层排除。
+        // ignored 仅展示层过滤，allApps 持全量以便落盘保留标记
         let visible = allApps.filter { !$0.ignored }
         let q = searchField.stringValue
         filtered = q.isEmpty ? visible : visible.filter { $0.matchesSearch(q) }
@@ -340,13 +329,13 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     func controlTextDidChange(_ obj: Notification) { applyFilter() }
     @objc func focusSearch(_ sender: Any?) { view.window?.makeFirstResponder(searchField) }
 
-    // MARK: - 打开 / 访达
+    // MARK: - 打开 / 访达 / Ignore
 
     @objc private func openSelected() {
         let row = tableView.clickedRow >= 0 ? tableView.clickedRow : tableView.selectedRow
         guard row >= 0, row < filtered.count else { return }
         NSWorkspace.shared.open(URL(fileURLWithPath: filtered[row].path))
-        // 不自记录：目标 app 结束本次前台使用后，由 knowledgeC 写入；下次刷新/重开读入。
+        // 不自记：目标 app 结束前台时 knowledgeC 会写，下次刷新读入
     }
 
     @objc private func revealSelected() {
@@ -360,8 +349,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         NSWorkspace.shared.open(url)
     }
 
-    // 忽略选中 app：在全量 allApps 中按 path 反查置 ignored=true，落盘并刷新（展示层随即隐藏）。
-    // 无会话内取消入口：取消 ignore = 用户手改 JSON 删该字段后重启（见 README 数据契约）。
+    // 无会话内取消 ignore 入口：取消 = 用户手改 JSON 删该字段 + 重启（见 README 数据契约）
     @objc private func ignoreSelected() {
         let row = tableView.clickedRow >= 0 ? tableView.clickedRow : tableView.selectedRow
         guard row >= 0, row < filtered.count else { return }
@@ -400,7 +388,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
             let c = dateCell()
             c.configure(epochMs: record.lastUpdate, jst: record.lastUpdateJst)
             return c
-        default:  // last_focus
+        default:
             let c = dateCell()
             c.configure(epochMs: record.lastFocus, jst: record.lastFocusJst)
             return c
@@ -423,12 +411,12 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     }
 }
 
-// 列表：回车键激活选中行（等价双击）。
+// 回车键 = 双击（等价激活选中行）
 final class AppsTableView: NSTableView {
     var onActivate: ((Int) -> Void)?
 
     override func keyDown(with event: NSEvent) {
-        if event.keyCode == 36 || event.keyCode == 76 { // Return / Enter
+        if event.keyCode == 36 || event.keyCode == 76 {   // Return / Enter
             if selectedRow >= 0 { onActivate?(selectedRow); return }
         }
         super.keyDown(with: event)

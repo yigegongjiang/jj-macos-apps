@@ -3,7 +3,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var window: NSWindow!
 
-    // 手动持久化窗口 content 尺寸（绕开状态恢复冲突）；位置总居中于鼠标所在屏幕（多显示器友好）。
+    // 手动持久化 content 尺寸（绕开状态恢复冲突）；位置总居中于鼠标所在屏（多显示器友好）
     private static let widthKey = "JJApps.windowW"
     private static let heightKey = "JJApps.windowH"
     private static let defaultSize = NSSize(width: 860, height: 620)

@@ -167,7 +167,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         title.font = .systemFont(ofSize: 12, weight: .semibold)
         title.translatesAutoresizingMaskIntoConstraints = false
 
-        let hint = NSTextField(labelWithString: "Grant access to jj-apps, then click Recheck.")
+        let hint = NSTextField(labelWithString: "Grant access to jj-macos-apps, then click Recheck.")
         hint.font = .systemFont(ofSize: 11)
         hint.textColor = .secondaryLabelColor
         hint.lineBreakMode = .byTruncatingTail

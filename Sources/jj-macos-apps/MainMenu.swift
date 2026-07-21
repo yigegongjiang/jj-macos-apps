@@ -5,7 +5,7 @@ nonisolated enum MainMenu {
     @MainActor
     static func build() -> NSMenu {
         let main = NSMenu()
-        let app = "jj-apps"
+        let app = "jj-macos-apps"
 
         // App
         let appItem = NSMenuItem()

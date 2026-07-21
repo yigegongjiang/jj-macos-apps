@@ -15,7 +15,7 @@ macOS 应用管理器：扫本机 app、按最近前台时间排序、即时搜�
 - 列表 3 列：App / Last Used / Last Update；点日期列头切换排序键，再点同列 toggle 升 / 降；默认 `last_focus` 降序
 - 快捷：双击 or Enter 启动、右键 Reveal / Add to Ignore、⌘R 刷新、⌘F 搜索
 - Ignore：右键 Add to Ignore -> 立即隐藏 + 落盘 `"ignored": true`；取消 = 手删 JSON 该字段 + 重启
-- 界面固定英文；数据 = `~/.config/jj-apps/apps.json`（pretty JSON，可手改）
+- 界面固定英文；数据 = `~/.config/jj-macos-apps/apps.json`（pretty JSON，可手改）
 
 ## 架构
 
@@ -53,5 +53,5 @@ macOS 应用管理器：扫本机 app、按最近前台时间排序、即时搜�
 - `VERSION` — 单一版本源；`package.sh` 注入 `Info.plist`
 - `Package.swift` — SwiftPM executable（macOS 13+）
 - `package.sh` — Release 构建 + 组装 `.app` + ad-hoc 签名 + 装 `/Applications`
-- `Sources/jj-apps/` — Swift 源码
+- `Sources/jj-macos-apps/` — Swift 源码
 - `Resources/Info.plist.in` — bundle 模板（`@VERSION@` 占位）

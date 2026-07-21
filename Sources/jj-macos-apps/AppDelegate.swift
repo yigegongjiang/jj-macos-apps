@@ -4,15 +4,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var window: NSWindow!
 
     // 手动持久化 content 尺寸（绕开状态恢复冲突）；位置总居中于鼠标所在屏（多显示器友好）
-    private static let widthKey = "JJApps.windowW"
-    private static let heightKey = "JJApps.windowH"
+    private static let widthKey = "JJMacOSApps.windowW"
+    private static let heightKey = "JJMacOSApps.windowH"
     private static let defaultSize = NSSize(width: 860, height: 620)
     private static let minSize = NSSize(width: 560, height: 400)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppPaths.migrateLegacyDataDirectoryIfNeeded()
+        Self.migrateLegacyWindowPrefsIfNeeded()
         NSApp.mainMenu = MainMenu.build()
         setupWindow()
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // 迁移旧键 JJApps.windowW/H -> JJMacOSApps.windowW/H；幂等 + 一次即清
+    private static func migrateLegacyWindowPrefsIfNeeded() {
+        let ud = UserDefaults.standard
+        if ud.object(forKey: widthKey) == nil, let w = ud.object(forKey: "JJApps.windowW") {
+            ud.set(w, forKey: widthKey)
+        }
+        if ud.object(forKey: heightKey) == nil, let h = ud.object(forKey: "JJApps.windowH") {
+            ud.set(h, forKey: heightKey)
+        }
+        ud.removeObject(forKey: "JJApps.windowW")
+        ud.removeObject(forKey: "JJApps.windowH")
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
@@ -25,7 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "jj-apps"
+        window.title = "jj-macos-apps"
         window.contentMinSize = Self.minSize
         window.isRestorable = false
         window.delegate = self

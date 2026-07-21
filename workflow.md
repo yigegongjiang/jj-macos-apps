@@ -10,13 +10,13 @@
 
 # 调试
 
-- Debug 快编：`swift build` -> `./.build/debug/jj-apps`
-- Release 装机：`./package.sh` -> `open -a /Applications/jj-apps.app`
+- Debug 快编：`swift build` -> `./.build/debug/jj-macos-apps`
+- Release 装机：`./package.sh` -> `open -a /Applications/jj-macos-apps.app`
 - 验证：
   - 秒开：先 JSON 缓存渲染，再后台 scan 补差
   - FDA denied：仍列全部 app，`last_focus` 无历史 = `0`，显示授权横幅
   - FDA granted：`last_focus` = knowledgeC 值，按其降序
-- FDA 授权稳定性：签名 DR 钉 identifier-only（不含 cdhash），重建长期有效。首次从旧 ad-hoc 切换需重授一次：设置 -> 完全磁盘访问 -> 删旧条目 -> 重新添加 `/Applications/jj-apps.app` -> 退出重开
+- FDA 授权稳定性：签名 DR 钉 identifier-only（不含 cdhash），重建长期有效。首次从旧 ad-hoc 切换需重授一次：设置 -> 完全磁盘访问 -> 删旧条目 -> 重新添加 `/Applications/jj-macos-apps.app` -> 退出重开
 
 # 发布
 

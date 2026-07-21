@@ -21,7 +21,7 @@ nonisolated enum KnowledgeDB {
         let fm = FileManager.default
         let src = sourceURL()
         let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            .appendingPathComponent("jj-apps-knowledge-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("jj-macos-apps-knowledge-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: tmpDir) }
 
         do {

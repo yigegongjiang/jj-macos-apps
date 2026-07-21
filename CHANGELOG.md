@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.2
+
+- 签名改为 identifier-only DR（不含 cdhash），FDA 完全磁盘访问授权跨重建长期有效，不再因重新打包失效。
+
 ## v0.1.1
 
 - 移除 `L10n` 抽象，界面固定为英文；bundle 仅声明 `en`。

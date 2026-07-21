@@ -23,7 +23,9 @@ sed "s/@VERSION@/$VERSION/g" "$ROOT/Resources/Info.plist.in" > "$BUNDLE/Contents
 printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
 echo "==> [3/4] ad-hoc 签名"
-codesign --force --sign - "$BUNDLE"
+# DR 钉成 identifier-only（不含 cdhash），FDA 授权才不会因重建时 cdhash 变化而失效。
+BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$BUNDLE/Contents/Info.plist")"
+codesign --force --sign - --identifier "$BUNDLE_ID" -r="designated => identifier \"$BUNDLE_ID\"" "$BUNDLE"
 
 echo "==> [4/4] 安装到 /Applications"
 # 关掉在跑的旧实例，否则占用二进制导致拷贝/运行异常

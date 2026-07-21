@@ -16,6 +16,7 @@
   - **秒开**：启动先读 `~/.config/jj-apps/apps.json` 渲染（首帧即有内容），后台 scan 再补新装 / 删卸载。
   - **FDA denied**：仍列出全部 app；`last_focus` 无历史值时为 `0`；显示授权横幅。
   - **FDA granted**：`last_focus` = KnowledgeC `/app/usage` 最近区间结束时间；按其降序。
+- **FDA 授权稳定性**：签名用 identifier-only DR，授权跨重建长期有效。首次从旧 ad-hoc 切换需重授一次：设置 → 完全磁盘访问 → 删旧 `jj-apps` 条目 → 重新添加 `/Applications/jj-apps.app` 开启 → 退出重开 app。
 
 # 发布
 

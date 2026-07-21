@@ -6,6 +6,10 @@
     <string>jj-apps</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+    </array>
     <key>CFBundleDisplayName</key>
     <string>jj-apps</string>
     <key>CFBundleExecutable</key>

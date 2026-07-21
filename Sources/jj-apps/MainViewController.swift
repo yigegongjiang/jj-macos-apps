@@ -10,10 +10,11 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     private let statusLabel = NSTextField(labelWithString: "")
     private let spinner = NSProgressIndicator()
 
-    // 自动退出：空闲计时，任意交互重置倒计时；下拉选 1/5/10 分钟，默认 5。
-    private let autoExitPopup = NSPopUpButton(frame: .zero, pullsDown: false)
-    private let autoExitOptions = [1, 5, 10]  // 分钟；默认索引 1 = 5min
-    private var autoExitTimer: Timer?
+    // 自动退出：空闲 idleSeconds 秒后退出，任意交互重置。只显示剩余秒数。
+    private let countdownLabel = NSTextField(labelWithString: "")
+    private static let idleSeconds = 300      // 空闲阈值（秒）
+    private var autoExitDeadline: Date?       // 到点即退出的时刻；每次交互后移
+    private var countdownTimer: Timer?        // 每秒刷新倒计时 + 到点触发退出
     private var activityMonitor: Any?
 
     private let bannerView = NSView()
@@ -33,11 +34,11 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
     override func loadView() {
         let root = NSView()
 
-        searchField.placeholderString = L10n.searchPlaceholder
+        searchField.placeholderString = "Search apps"
         searchField.delegate = self
         searchField.translatesAutoresizingMaskIntoConstraints = false
 
-        refreshButton.title = L10n.refresh
+        refreshButton.title = "Refresh"
         refreshButton.bezelStyle = .rounded
         refreshButton.target = self
         refreshButton.action = #selector(refresh(_:))
@@ -52,18 +53,14 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         spinner.isDisplayedWhenStopped = false
         spinner.translatesAutoresizingMaskIntoConstraints = false
 
-        for m in autoExitOptions { autoExitPopup.addItem(withTitle: L10n.autoExitMinutes(m)) }
-        autoExitPopup.selectItem(at: 1)  // 默认 5min
-        autoExitPopup.controlSize = .small
-        autoExitPopup.font = .systemFont(ofSize: 11)
-        autoExitPopup.target = self
-        autoExitPopup.action = #selector(autoExitChanged(_:))
-        autoExitPopup.translatesAutoresizingMaskIntoConstraints = false
+        countdownLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)  // 数字等宽 → 每秒跳动不抖动
+        countdownLabel.textColor = .secondaryLabelColor
+        countdownLabel.translatesAutoresizingMaskIntoConstraints = false
 
         root.addSubview(searchField)
         root.addSubview(statusLabel)
         root.addSubview(spinner)
-        root.addSubview(autoExitPopup)
+        root.addSubview(countdownLabel)
         root.addSubview(refreshButton)
 
         buildBanner()
@@ -81,7 +78,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
         // App 列：图标 + 名字 + bundleId；随窗口宽度自动伸缩；不参与排序
         let appCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("app"))
-        appCol.title = L10n.columnApp
+        appCol.title = "Application"
         appCol.resizingMask = .autoresizingMask
         appCol.minWidth = 200
         appCol.width = 420
@@ -89,7 +86,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
         // Last Used 列：可点击排序，prototype 降序
         let focusCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(Self.sortKeyLastFocus))
-        focusCol.title = L10n.columnLastUsed
+        focusCol.title = "Last Used"
         focusCol.minWidth = 130
         focusCol.width = 150
         focusCol.resizingMask = .userResizingMask
@@ -98,7 +95,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
         // Last Update 列：可点击排序，prototype 降序
         let updateCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(Self.sortKeyLastUpdate))
-        updateCol.title = L10n.columnLastUpdate
+        updateCol.title = "Last Update"
         updateCol.minWidth = 130
         updateCol.width = 150
         updateCol.resizingMask = .userResizingMask
@@ -122,10 +119,10 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
             refreshButton.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -12),
             refreshButton.centerYAnchor.constraint(equalTo: searchField.centerYAnchor),
 
-            autoExitPopup.trailingAnchor.constraint(equalTo: refreshButton.leadingAnchor, constant: -8),
-            autoExitPopup.centerYAnchor.constraint(equalTo: searchField.centerYAnchor),
+            countdownLabel.trailingAnchor.constraint(equalTo: refreshButton.leadingAnchor, constant: -8),
+            countdownLabel.centerYAnchor.constraint(equalTo: searchField.centerYAnchor),
 
-            spinner.trailingAnchor.constraint(equalTo: autoExitPopup.leadingAnchor, constant: -8),
+            spinner.trailingAnchor.constraint(equalTo: countdownLabel.leadingAnchor, constant: -8),
             spinner.centerYAnchor.constraint(equalTo: searchField.centerYAnchor),
 
             statusLabel.trailingAnchor.constraint(equalTo: spinner.leadingAnchor, constant: -8),
@@ -172,21 +169,21 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         warning.contentTintColor = .systemOrange
         warning.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = NSTextField(labelWithString: L10n.fdaTitle)
+        let title = NSTextField(labelWithString: "Full Disk Access required for Last Used")
         title.font = .systemFont(ofSize: 12, weight: .semibold)
         title.translatesAutoresizingMaskIntoConstraints = false
 
-        let hint = NSTextField(labelWithString: L10n.fdaHint)
+        let hint = NSTextField(labelWithString: "Grant access to jj-apps, then click Recheck.")
         hint.font = .systemFont(ofSize: 11)
         hint.textColor = .secondaryLabelColor
         hint.lineBreakMode = .byTruncatingTail
         hint.translatesAutoresizingMaskIntoConstraints = false
 
-        let open = NSButton(title: L10n.fdaOpenSettings, target: self, action: #selector(openFDASettings))
+        let open = NSButton(title: "Open Full Disk Access", target: self, action: #selector(openFDASettings))
         open.bezelStyle = .rounded
         open.translatesAutoresizingMaskIntoConstraints = false
 
-        let recheck = NSButton(title: L10n.fdaRecheck, target: self, action: #selector(refresh(_:)))
+        let recheck = NSButton(title: "Recheck", target: self, action: #selector(refresh(_:)))
         recheck.bezelStyle = .rounded
         recheck.translatesAutoresizingMaskIntoConstraints = false
 
@@ -217,16 +214,31 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
     // MARK: - 自动退出（空闲计时；任意交互重置倒计时，仅真正空闲 N 分钟后退出）
 
-    @objc private func autoExitChanged(_ sender: NSPopUpButton) { scheduleAutoExit() }
-
+    // 重置倒计时：deadline 推到「当前 + idleSeconds」，并保证每秒刷新的 timer 在跑。
     private func scheduleAutoExit() {
-        autoExitTimer?.invalidate()
-        let minutes = autoExitOptions[max(0, autoExitPopup.indexOfSelectedItem)]
-        let t = Timer(timeInterval: TimeInterval(minutes * 60), repeats: false) { _ in
-            MainActor.assumeIsolated { NSApp.terminate(nil) }  // Timer 走 RunLoop.main，必在主线程
+        autoExitDeadline = Date().addingTimeInterval(TimeInterval(Self.idleSeconds))
+        updateCountdownLabel()  // 立即刷新，避免首个 tick 前 1s 空窗
+        if countdownTimer == nil {
+            // 单个常驻 repeating timer；交互只后移 deadline，不重建。
+            // target-action 而非 block：规避 @Sendable 闭包捕获 self 的并发约束。
+            // .common：菜单展开等 tracking 期间仍计时。
+            let t = Timer(timeInterval: 1, target: self,
+                          selector: #selector(tickCountdown), userInfo: nil, repeats: true)
+            RunLoop.main.add(t, forMode: .common)
+            countdownTimer = t
         }
-        RunLoop.main.add(t, forMode: .common)  // .common：菜单/下拉展开等 tracking 期间仍计时
-        autoExitTimer = t
+    }
+
+    @objc private func tickCountdown() {
+        guard let deadline = autoExitDeadline else { return }
+        if Date() >= deadline { NSApp.terminate(nil); return }  // RunLoop.main → 已在主线程
+        updateCountdownLabel()
+    }
+
+    private func updateCountdownLabel() {
+        guard let deadline = autoExitDeadline else { return }
+        let remaining = max(0, Int(deadline.timeIntervalSinceNow.rounded(.up)))
+        countdownLabel.stringValue = "Exit: \(remaining)s"
     }
 
     // 本 app 内任意键鼠交互重置倒计时；后台无事件即持续计时 → 空闲到点退出。
@@ -278,7 +290,7 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         isRefreshing = true
         refreshButton.isEnabled = false
         spinner.startAnimation(nil)
-        if allApps.isEmpty { statusLabel.stringValue = L10n.scanning }
+        if allApps.isEmpty { statusLabel.stringValue = "Scanning…" }
         Task.detached(priority: .userInitiated) {
             let result = AppRepository.rebuild()
             await MainActor.run { self.apply(result) }
@@ -316,9 +328,11 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
         let q = searchField.stringValue
         filtered = q.isEmpty ? visible : visible.filter { $0.matchesSearch(q) }
         tableView.reloadData()
-        statusLabel.stringValue = filtered.count == visible.count
-            ? L10n.statusTotal(visible.count)
-            : L10n.statusFiltered(shown: filtered.count, total: visible.count)
+        if filtered.count == visible.count {
+            statusLabel.stringValue = visible.count == 1 ? "1 app" : "\(visible.count) apps"
+        } else {
+            statusLabel.stringValue = "\(filtered.count) / \(visible.count) apps"
+        }
     }
 
     // MARK: - 搜索
@@ -360,10 +374,10 @@ final class MainViewController: NSViewController, NSTableViewDataSource, NSTable
 
     private func buildRowMenu() -> NSMenu {
         let menu = NSMenu()
-        menu.addItem(withTitle: L10n.open, action: #selector(openSelected), keyEquivalent: "")
-        menu.addItem(withTitle: L10n.revealInFinder, action: #selector(revealSelected), keyEquivalent: "")
+        menu.addItem(withTitle: "Open", action: #selector(openSelected), keyEquivalent: "")
+        menu.addItem(withTitle: "Reveal in Finder", action: #selector(revealSelected), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: L10n.addToIgnore, action: #selector(ignoreSelected), keyEquivalent: "")
+        menu.addItem(withTitle: "Add to Ignore", action: #selector(ignoreSelected), keyEquivalent: "")
         return menu
     }
 

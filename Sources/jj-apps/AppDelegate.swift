@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.appName
+        window.title = "jj-apps"
         window.contentMinSize = Self.minSize
         window.isRestorable = false
         window.delegate = self

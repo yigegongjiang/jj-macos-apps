@@ -5,57 +5,57 @@ nonisolated enum MainMenu {
     @MainActor
     static func build() -> NSMenu {
         let main = NSMenu()
-        let app = L10n.appName
+        let app = "jj-apps"
 
         // App 菜单
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
         appItem.submenu = appMenu
-        appMenu.addItem(withTitle: L10n.menuAbout(app),
+        appMenu.addItem(withTitle: "About \(app)",
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        let hide = appMenu.addItem(withTitle: L10n.menuHide(app),
+        let hide = appMenu.addItem(withTitle: "Hide \(app)",
                                    action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         hide.keyEquivalentModifierMask = [.command]
-        let hideOthers = appMenu.addItem(withTitle: L10n.menuHideOthers,
+        let hideOthers = appMenu.addItem(withTitle: "Hide Others",
                                          action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
         hideOthers.keyEquivalentModifierMask = [.command, .option]
-        appMenu.addItem(withTitle: L10n.menuShowAll,
+        appMenu.addItem(withTitle: "Show All",
                         action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        let quit = appMenu.addItem(withTitle: L10n.menuQuit(app),
+        let quit = appMenu.addItem(withTitle: "Quit \(app)",
                                    action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.keyEquivalentModifierMask = [.command]
 
         // Edit 菜单（搜索框文本编辑需要标准剪贴板动作）
         let editItem = NSMenuItem()
         main.addItem(editItem)
-        let editMenu = NSMenu(title: L10n.menuEdit)
+        let editMenu = NSMenu(title: "Edit")
         editItem.submenu = editMenu
-        editMenu.addItem(withTitle: L10n.menuCut, action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        editMenu.addItem(withTitle: L10n.menuCopy, action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: L10n.menuPaste, action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        editMenu.addItem(withTitle: L10n.menuSelectAll, action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
         // View 菜单（刷新 + 查找聚焦搜索框）
         let viewItem = NSMenuItem()
         main.addItem(viewItem)
-        let viewMenu = NSMenu(title: L10n.menuView)
+        let viewMenu = NSMenu(title: "View")
         viewItem.submenu = viewMenu
-        viewMenu.addItem(withTitle: L10n.menuRefresh,
+        viewMenu.addItem(withTitle: "Refresh",
                          action: #selector(MainViewController.refresh(_:)), keyEquivalent: "r")
-        viewMenu.addItem(withTitle: L10n.menuFind,
+        viewMenu.addItem(withTitle: "Find",
                          action: #selector(MainViewController.focusSearch(_:)), keyEquivalent: "f")
 
         // Window 菜单
         let winItem = NSMenuItem()
         main.addItem(winItem)
-        let winMenu = NSMenu(title: L10n.menuWindow)
+        let winMenu = NSMenu(title: "Window")
         winItem.submenu = winMenu
-        winMenu.addItem(withTitle: L10n.menuMinimize,
+        winMenu.addItem(withTitle: "Minimize",
                         action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
-        winMenu.addItem(withTitle: L10n.menuZoom, action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
+        winMenu.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
         NSApp.windowsMenu = winMenu
 
         return main

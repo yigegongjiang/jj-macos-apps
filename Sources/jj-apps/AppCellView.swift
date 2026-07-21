@@ -101,7 +101,7 @@ final class DateCellView: NSTableCellView {
             label.stringValue = Self.display(epochMs: epochMs, jst: jst)
             label.textColor = .secondaryLabelColor
         } else {
-            label.stringValue = L10n.never
+            label.stringValue = "—"
             label.textColor = .tertiaryLabelColor
         }
     }

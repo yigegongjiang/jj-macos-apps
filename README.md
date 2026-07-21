@@ -13,7 +13,7 @@ macOS 应用管理器：扫描主机 app，按最近一次处于前台的时间�
 - 打开即**秒开**：先读 JSON 缓存直接渲染，随后后台扫描补新装 / 删卸载的 app。
 - 搜索框即时过滤（名称 / bundleId / 路径，多词 AND）；列表 3 列（App / Last Used / Last Update），点击日期列头切换排序键，再点同列 toggle 升 / 降序（默认 `last_focus` 降序）；双击 / 回车启动，右键「Reveal in Finder」/「Add to Ignore」，⌘R 刷新，⌘F 聚焦搜索。
 - **Ignore**：右键「Add to Ignore」→ 该 app 立即从列表隐藏并落盘（记录留在 JSON，标 `"ignored": true`）。无取消入口——手删该行的 `ignored` 字段并重启即恢复。
-- 界面英文。
+- 界面固定英文，无国际化 / 多语言切换。
 - 数据文件：`~/.config/jj-apps/apps.json`（pretty JSON，可手改）。
 
 ## 架构
@@ -24,7 +24,7 @@ macOS 应用管理器：扫描主机 app，按最近一次处于前台的时间�
 - **`last_update` = `.app/Contents` 目录 birthtime**：文件系统 syscall（`FileManager.creationDate` → `getattrlist`），与 KnowledgeC 无关。选内层 `Contents/` 而非顶层 `.app`：具体文件（Info.plist / binary）时间戳是打包时刻（`copyfile` 保留源 mtime），只有目录 birthtime 是本机创建时刻——首装 = 落盘时刻；Sparkle / MAS 更新替换整个 Contents → birthtime 重置为更新时刻。顶层 `.app` 的 mtime 会被 quarantine xattr 等无关噪声触发，故不用。每次 rebuild 以 scanner 结果覆盖，不与 JSON 已存值 `max`-merge（文件系统当下即真相；卸载重装应刷新）。
 - **写盘安全**：写入统一在主线程串行，后台扫描本身不落盘。原子写（tmp + fsync + rename）+ `.bak`；app 是唯一写入方，不需 flock / FSEvents。
 - **时间双字段**：主字段 epoch 毫秒（排序用）+ `*_jst` 日本时间可读串（JST=UTC+9 恒定，供人阅读 JSON）。
-- 技术：Swift + AppKit 纯源码（无 SwiftUI / Storyboard / xib，SwiftPM executable + `defaultIsolation(MainActor)`）；系统 SQLite3；仅英文；零第三方依赖。
+- 技术：Swift + AppKit 纯源码（无 SwiftUI / Storyboard / xib，SwiftPM executable + `defaultIsolation(MainActor)`）；系统 SQLite3；英文文案直接写在调用点，无本地化层；零第三方依赖。
 
 ## 数据契约
 

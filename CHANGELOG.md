@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.5
+
+- 时间相对显示：<1h 改为 `Xm`（四舍五入到分），1h~72h 沿用 `Xh`，超过仍走 JST 绝对时间。
+
 ## v0.1.4
 
 - 全量重命名 `jj-apps` -> `jj-macos-apps`：product / bundle-id / 二进制 / `/Applications/*.app` / 数据目录 `~/.config/jj-macos-apps` / UserDefaults / UI 文案。

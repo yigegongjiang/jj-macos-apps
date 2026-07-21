@@ -92,7 +92,7 @@ final class DateCellView: NSTableCellView {
         ])
     }
 
-    // 72h 内相对 "Xh"，超过则 JST "YYYY-MM-DD HH:MM"（去秒 / 时区尾）；0 / 缺失 -> "—" 三级灰
+    // <1h 相对 "Xm"（四舍五入到分），1h~72h "Xh"，超过则 JST "YYYY-MM-DD HH:MM"；0 / 缺失 -> "—" 三级灰
     func configure(epochMs: Int64, jst: String) {
         if epochMs > 0, jst.count >= 16 {
             label.stringValue = Self.display(epochMs: epochMs, jst: jst)
@@ -105,8 +105,12 @@ final class DateCellView: NSTableCellView {
 
     private static func display(epochMs: Int64, jst: String) -> String {
         let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
-        let deltaH = Double(nowMs - epochMs) / 3_600_000.0
-        guard deltaH >= 0, deltaH <= 72 else { return String(jst.prefix(16)) }
+        let deltaMs = nowMs - epochMs
+        guard deltaMs >= 0 else { return String(jst.prefix(16)) }
+        let deltaMin = (deltaMs + 30_000) / 60_000     // 四舍五入到分
+        if deltaMin < 60 { return "\(deltaMin)m" }
+        let deltaH = Double(deltaMs) / 3_600_000.0
+        guard deltaH <= 72 else { return String(jst.prefix(16)) }
         let s = String(format: "%.1f", deltaH)
         return (s.hasSuffix(".0") ? String(s.dropLast(2)) : s) + "h"
     }

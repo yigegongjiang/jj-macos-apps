@@ -9,7 +9,7 @@ macOS 应用管理器：扫本机 app、按最近前台时间排序、即时搜�
 
 ## 使用
 
-- 构建装机：`./package.sh` -> 见 [workflow.md](./workflow.md)
+- 构建装机：`./scripts/install-local.sh` -> 见 [workflow.md](./workflow.md)
 - 启动秒开：先读 JSON 缓存渲染，后台再 scan 补新装 / 删卸载
 - 搜索：多词 AND，命中 name / bundleId / path
 - 列表 3 列：App / Last Used / Last Update；点日期列头切换排序键，再点同列 toggle 升 / 降；默认 `last_focus` 降序
@@ -50,8 +50,8 @@ macOS 应用管理器：扫本机 app、按最近前台时间排序、即时搜�
 
 ## 项目结构
 
-- `VERSION` — 单一版本源；`package.sh` 注入 `Info.plist`
+- `VERSION` — 单一版本源；`scripts/install-local.sh` 注入 `Info.plist`
 - `Package.swift` — SwiftPM executable（macOS 13+）
-- `package.sh` — Release 构建 + 组装 `.app` + ad-hoc 签名 + 装 `/Applications`
+- `scripts/install-local.sh` — Release 构建 + 组装 `.app` + ad-hoc 签名 + 装 `/Applications`（`INSTALL_DIR` 可覆盖目标目录）
 - `Sources/jj-macos-apps/` — Swift 源码
 - `Resources/Info.plist.in` — bundle 模板（`@VERSION@` 占位）

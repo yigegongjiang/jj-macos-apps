@@ -11,7 +11,7 @@
 # 调试
 
 - Debug 快编：`swift build` -> `./.build/debug/jj-macos-apps`
-- Release 装机：`./package.sh` -> `open -a /Applications/jj-macos-apps.app`
+- Release 装机：`./scripts/install-local.sh` -> `open -a /Applications/jj-macos-apps.app`（`INSTALL_DIR=/some/dir` 可换目标目录）
 - 验证：
   - 秒开：先 JSON 缓存渲染，再后台 scan 补差
   - FDA denied：仍列全部 app，`last_focus` 无历史 = `0`，显示授权横幅
@@ -20,15 +20,15 @@
 
 # 发布
 
-代码变更完成后执行。交付闸 = `package.sh` 成功（编译失败即中止）。
+代码变更完成后执行。交付闸 = `scripts/install-local.sh` 成功（编译失败即中止）。
 
 ## 步骤
 
-1. 写版本：改根 `VERSION`（`package.sh` 注入 `Info.plist`）+ 同步 `CHANGELOG.md`。递增规则：PATCH 默认 / MINOR 新功能 / MAJOR 不兼容
+1. 写版本：改根 `VERSION`（`scripts/install-local.sh` 注入 `Info.plist`）+ 同步 `CHANGELOG.md`。递增规则：PATCH 默认 / MINOR 新功能 / MAJOR 不兼容
 2. 打包 + 提交：
 
 ```bash
-./package.sh
+./scripts/install-local.sh
 git add -A
 git commit -m "release: vX.Y.Z"
 git tag -a vX.Y.Z -m "vX.Y.Z"

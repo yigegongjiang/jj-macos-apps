@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.6
+
+- `package.sh` -> `scripts/install-local.sh`：脚本自 `cd` 工程根（任意目录可执行）、路径改相对、新增 `INSTALL_DIR` 覆盖、安装后 `codesign --verify` 校验。行为不变。
+- 文档同步：`README.md` / `workflow.md` / `Package.swift` 注释。
+
 ## v0.1.5
 
 - 时间相对显示：<1h 改为 `Xm`（四舍五入到分），1h~72h 沿用 `Xh`，超过仍走 JST 绝对时间。

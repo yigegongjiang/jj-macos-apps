@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.8
+
+- App 图标葡萄放大一些（各层 SVG 外包 `<g transform>`：以果串中心放大 1.12 并居中），四周留白更少。
+
 ## v0.1.7
 
 - App 图标换成葡萄：`Resources/AppIcon.icon`（Icon Composer 分层 SVG + Dark 背景）替换 `AppIcon.icns`；`install-local.sh` 用 `actool` 编译出 `Assets.car` + `AppIcon.icns`，`Info.plist` 增 `CFBundleIconName`。

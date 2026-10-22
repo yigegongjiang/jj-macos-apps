@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.9
+
+- `install-local.sh`：`actool` 输入 / 输出路径改绝对 + 校验 `Assets.car` 产出。原因：actool 共享 daemon 按陈旧 cwd 解析相对路径，实测会编进别的工程的 `Resources/AppIcon.icon`。
+
 ## v0.1.8
 
 - App 图标葡萄放大一些（各层 SVG 外包 `<g transform>`：以果串中心放大 1.12 并居中），四周留白更少。

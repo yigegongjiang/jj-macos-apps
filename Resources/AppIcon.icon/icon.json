@@ -1,0 +1,97 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "srgb:1.00000,0.97255,0.89020,1.00000",
+          "srgb:0.97647,0.89020,0.68235,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "srgb:0.30588,0.26667,0.20000,1.00000",
+          "srgb:0.20000,0.17255,0.12549,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Grapes",
+      "layers": [
+        {
+          "name": "Front",
+          "image-name": "grapes-front.svg",
+          "glass": true
+        },
+        {
+          "name": "Back",
+          "image-name": "grapes-back.svg",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0.5
+      },
+      "specular": true,
+      "lighting": "individual"
+    },
+    {
+      "name": "Branch",
+      "layers": [
+        {
+          "name": "Leaf",
+          "image-name": "leaf.svg",
+          "glass": true
+        },
+        {
+          "name": "Stem",
+          "image-name": "stem.svg",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.3
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0.5
+      },
+      "specular": true
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}

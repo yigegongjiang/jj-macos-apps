@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.7
+
+- App 图标换成葡萄：`Resources/AppIcon.icon`（Icon Composer 分层 SVG + Dark 背景）替换 `AppIcon.icns`；`install-local.sh` 用 `actool` 编译出 `Assets.car` + `AppIcon.icns`，`Info.plist` 增 `CFBundleIconName`。
+
 ## v0.1.6
 
 - `package.sh` -> `scripts/install-local.sh`：脚本自 `cd` 工程根（任意目录可执行）、路径改相对、新增 `INSTALL_DIR` 覆盖、安装后 `codesign --verify` 校验。行为不变。

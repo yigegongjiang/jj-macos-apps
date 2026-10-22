@@ -55,3 +55,4 @@ macOS 应用管理器：扫本机 app、按最近前台时间排序、即时搜�
 - `scripts/install-local.sh` — Release 构建 + 组装 `.app` + ad-hoc 签名 + 装 `/Applications`（`INSTALL_DIR` 可覆盖目标目录）
 - `Sources/jj-macos-apps/` — Swift 源码
 - `Resources/Info.plist.in` — bundle 模板（`@VERSION@` 占位）
+- `Resources/AppIcon.icon` — Icon Composer 分层图标（SVG：葡萄 + 枝叶，含 Dark 背景）；`install-local.sh` 经 `actool` 编译

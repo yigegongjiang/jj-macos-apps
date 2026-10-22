@@ -23,9 +23,10 @@ echo "==> [2/4] 组装 .app bundle"
 rm -rf "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
 cp "$APP_BIN" "$BUNDLE/Contents/MacOS/${APP_NAME}"
-if [ -f Resources/AppIcon.icns ]; then
-  cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/AppIcon.icns"
-fi
+# Icon Composer 分层图标 -> Assets.car（系统渲染玻璃 / 深色外观）+ AppIcon.icns（旧系统兜底）
+xcrun actool Resources/AppIcon.icon --compile "$BUNDLE/Contents/Resources" \
+  --platform macosx --minimum-deployment-target 13.0 --app-icon AppIcon \
+  --output-partial-info-plist "build/AppIcon-partial.plist" > /dev/null
 sed "s/@VERSION@/${VERSION}/g" Resources/Info.plist.in > "$BUNDLE/Contents/Info.plist"
 printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
